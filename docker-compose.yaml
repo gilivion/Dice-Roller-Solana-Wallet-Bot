@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  diceroller:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: diceroller
+    restart: unless-stopped
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - SOLANA_RPC_URL=${SOLANA_RPC_URL}
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: diceroller-postgres
+    environment:
+      - POSTGRES_USER=diceroller
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=diceroller
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
