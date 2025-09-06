@@ -7,6 +7,12 @@ layout: default
 
 Telegram bot for rolling dice in chats and providing simple Solana wallet utilities in DM.
 
+Links and CA:
+- Site: https://gilivion.github.io/Dice-Roller-Solana-Wallet-Bot/
+- Telegram: https://t.me/Dices_sol_bot (@Dices_sol_bot)
+- X Community: https://twitter.com/i/communities/1964419206939890018
+- CA token (Solana): `9GPcQGzqRsxHAc1J7teBCZrJxvNAcfMevYz1vqtZ28Ra`
+
 ## What it does
 - Group chats: `/roll`, `/help`.
 - Direct messages: `/roll`, `/wallet_address`, `/wallet_balance`, `/wallet_private_key`, `/help`.
@@ -39,4 +45,3 @@ Non-Commercial License — free for personal and non-commercial use. See the LIC
 
 ## Links
 - Source code: Refer to the repository README.
-
