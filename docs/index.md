@@ -11,7 +11,7 @@ Links and CA:
 - Site: https://gilivion.github.io/Dice-Roller-Solana-Wallet-Bot/
 - Telegram: https://t.me/Dices_sol_bot (@Dices_sol_bot)
 - X Community: https://twitter.com/i/communities/1964419206939890018
-- CA token (Solana): `9GPcQGzqRsxHAc1J7teBCZrJxvNAcfMevYz1vqtZ28Ra`
+- CA token (Solana): `f5QobjfEm8j2AjdWrKZBdmVpg4zwaY8ciwp6bmpbunt`
 
 ## What it does
 - Group chats: `/roll`, `/help`.

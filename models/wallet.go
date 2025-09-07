@@ -85,11 +85,65 @@ func (w *Wallet) GetBalance() (uint64, error) {
         return 0, errors.New("SOLANA_RPC_URL is not configured")
     }
     addr := w.AddressBase58()
+    // First try getBalance (most providers)
+    {
+        payload := map[string]any{
+            "jsonrpc": "2.0",
+            "id":      1,
+            "method":  "getBalance",
+            "params":  []any{addr},
+        }
+        body, _ := json.Marshal(payload)
+        req, err := http.NewRequest("POST", rpc, bytes.NewReader(body))
+        if err != nil {
+            return 0, err
+        }
+        req.Header.Set("Content-Type", "application/json")
+        req.Header.Set("Accept", "application/json")
+        client := &http.Client{Timeout: 10 * time.Second}
+        resp, err := client.Do(req)
+        if err != nil {
+            return 0, err
+        }
+        defer resp.Body.Close()
+        var raw bytes.Buffer
+        if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+            _, _ = raw.ReadFrom(resp.Body)
+            msg := raw.String()
+            if len(msg) > 300 {
+                msg = msg[:300]
+            }
+            return 0, fmt.Errorf("rpc http status %d: %s", resp.StatusCode, strings.TrimSpace(msg))
+        }
+        var res struct {
+            JSONRPC string `json:"jsonrpc"`
+            ID      int    `json:"id"`
+            Result  struct {
+                Value uint64 `json:"value"`
+            } `json:"result"`
+            Error *struct {
+                Code    int    `json:"code"`
+                Message string `json:"message"`
+            } `json:"error"`
+        }
+        if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+            return 0, err
+        }
+        if res.Error == nil {
+            return res.Result.Value, nil
+        }
+        // If method not found, try fallback
+        if res.Error.Code != -32601 && !strings.Contains(strings.ToLower(res.Error.Message), "method") {
+            return 0, errors.New(res.Error.Message)
+        }
+    }
+
+    // Fallback to getAccountInfo and read lamports
     payload := map[string]any{
         "jsonrpc": "2.0",
         "id":      1,
-        "method":  "getBalance",
-        "params":  []any{addr},
+        "method":  "getAccountInfo",
+        "params":  []any{addr, map[string]any{"encoding": "jsonParsed", "commitment": "finalized"}},
     }
     body, _ := json.Marshal(payload)
     req, err := http.NewRequest("POST", rpc, bytes.NewReader(body))
@@ -113,24 +167,29 @@ func (w *Wallet) GetBalance() (uint64, error) {
         }
         return 0, fmt.Errorf("rpc http status %d: %s", resp.StatusCode, strings.TrimSpace(msg))
     }
-    var res struct {
+    var res2 struct {
         JSONRPC string `json:"jsonrpc"`
         ID      int    `json:"id"`
         Result  struct {
-            Value uint64 `json:"value"`
+            Value *struct {
+                Lamports uint64 `json:"lamports"`
+            } `json:"value"`
         } `json:"result"`
         Error *struct {
             Code    int    `json:"code"`
             Message string `json:"message"`
         } `json:"error"`
     }
-    if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+    if err := json.NewDecoder(resp.Body).Decode(&res2); err != nil {
         return 0, err
     }
-    if res.Error != nil {
-        return 0, errors.New(res.Error.Message)
+    if res2.Error != nil {
+        return 0, errors.New(res2.Error.Message)
     }
-    return res.Result.Value, nil
+    if res2.Result.Value == nil {
+        return 0, nil
+    }
+    return res2.Result.Value.Lamports, nil
 }
 
 func BuildSolanaPayURI(address string, amount string) string {
