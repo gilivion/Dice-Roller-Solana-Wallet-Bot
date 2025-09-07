@@ -89,7 +89,7 @@ func (w *Wallet) GetBalance() (uint64, error) {
         "jsonrpc": "2.0",
         "id":      1,
         "method":  "getBalance",
-        "params":  []any{addr, map[string]string{"commitment": "confirmed"}},
+        "params":  []any{addr},
     }
     body, _ := json.Marshal(payload)
     req, err := http.NewRequest("POST", rpc, bytes.NewReader(body))
@@ -97,6 +97,7 @@ func (w *Wallet) GetBalance() (uint64, error) {
         return 0, err
     }
     req.Header.Set("Content-Type", "application/json")
+    req.Header.Set("Accept", "application/json")
     client := &http.Client{Timeout: 10 * time.Second}
     resp, err := client.Do(req)
     if err != nil {
@@ -104,7 +105,13 @@ func (w *Wallet) GetBalance() (uint64, error) {
     }
     defer resp.Body.Close()
     if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-        return 0, fmt.Errorf("rpc http status %d", resp.StatusCode)
+        var buf bytes.Buffer
+        _, _ = buf.ReadFrom(resp.Body)
+        msg := buf.String()
+        if len(msg) > 300 {
+            msg = msg[:300]
+        }
+        return 0, fmt.Errorf("rpc http status %d: %s", resp.StatusCode, strings.TrimSpace(msg))
     }
     var res struct {
         JSONRPC string `json:"jsonrpc"`
