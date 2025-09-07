@@ -24,8 +24,8 @@ func SendHelpPrivate(ctx context.Context, b *bot.Bot, msg *appmodels.Message) {
         "/wallet_address - Show your Solana wallet address",
         "/wallet_balance - Show your wallet balance",
         "/wallet_private_key - Show your private key (base58) — be careful!",
+        "/qr [amount] - Generate a Solana Pay QR (optionally with amount)",
         "/help - Show this help",
     }
     msg.SendMessage(ctx, b, strings.Join(lines, "\n"))
 }
-

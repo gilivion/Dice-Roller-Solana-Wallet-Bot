@@ -125,3 +125,10 @@ func (w *Wallet) GetBalance() (uint64, error) {
     }
     return res.Result.Value, nil
 }
+
+func BuildSolanaPayURI(address string, amount string) string {
+    if amount == "" {
+        return "solana:" + address
+    }
+    return "solana:" + address + "?amount=" + amount
+}

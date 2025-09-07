@@ -35,6 +35,29 @@ func HandleMessage(ctx context.Context, b *bot.Bot, update *tgmodels.Update) {
     }
 
     if isPrivate {
+        if strings.HasPrefix(messageModel.Text, "/qr") {
+            parts := strings.Fields(messageModel.Text)
+            var amount string
+            if len(parts) > 1 {
+                amount = parts[1]
+            }
+            w, ok := dice.GetWallet(msg.From.ID)
+            if !ok {
+                w = dice.EnsureWallet(msg.From.ID)
+            }
+            uri := dice.BuildSolanaPayURI(w.AddressBase58(), amount)
+            png, err := generateQRPNG(uri)
+            if err != nil {
+                view.SendQRError(ctx, b, messageModel, err)
+                return
+            }
+            caption := "Solana Pay QR"
+            if amount != "" {
+                caption += " (amount: " + amount + ")"
+            }
+            view.SendQRImage(ctx, b, messageModel, png, caption)
+            return
+        }
         if strings.HasPrefix(messageModel.Text, "/wallet_address") {
             if w, ok := dice.GetWallet(msg.From.ID); ok {
                 view.SendWalletAddress(ctx, b, messageModel, w.AddressBase58())
